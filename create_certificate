@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+
+if [ $# -eq 0 ]; then
+  echo
+  echo
+  echo usage: 
+  echo create_certificate [domain]
+  echo
+  echo
+  exit 1
+fi
+
+if [ ! -f certificates/ca.crt ]; then
+  echo
+  echo
+  echo ca.crt does not exist. call ./create_certificate_authority first
+  echo
+  echo 
+  exit 1
+fi
+
+if [ -f certificates/$1.crt ]; then
+  echo
+  echo
+  echo  $1.crt already exists
+  echo
+  echo
+  
+  exit 1
+fi
+
+SERIAL_IN=$(cat certificates/serial.txt 2&> /dev/null)
+if [ "$?" != "0" ]; then
+  SERIAL_IN=00
+fi
+
+SERIAL_TMP=$((${SERIAL_IN} + 1))
+SERIAL_OUT=`printf "%03g" $SERIAL_TMP`
+
+openssl genrsa -out certificates/$1.key 4096
+openssl req -new -key certificates/$1.key -out certificates/$1.csr
+openssl x509 -req -days 3560 -in certificates/$1.csr -CA certificates/ca.crt -CAkey certificates/ca.key -set_serial $SERIAL_OUT -out certificates/$1.crt
+
+cat certificates/ca.crt >> certificates/$1.crt
+
+echo $SERIAL_OUT > certificates/serial.txt
+
+

@@ -1,0 +1,16 @@
+/usr/local/env sh
+
+if [ -f ca.crt ]; then
+  echo 
+  echo
+  echo ca.crt already exists
+  echo 
+  echo
+
+  exit 1
+fi
+
+mkdir -p certificates
+
+openssl genrsa -out certificates/ca.key 4096
+openssl req -new -x509 -days 3650 -key certificates/ca.key -out certificates/ca.crt
